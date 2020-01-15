@@ -5,11 +5,13 @@ from django import forms
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 from django.db.utils import DatabaseError
-from django.http import HttpResponseForbidden, HttpResponse
+from django.http import HttpResponseForbidden, HttpResponse, JsonResponse
 from django.urls import reverse
 from django.contrib.auth import login
 
 from  .models import User
+from users.utils.response_code import RETCODE
+
 
 logger = logging.Logger('django')
 class UserForm(forms.Form):
@@ -54,3 +56,17 @@ class RegisterView(View):
                 logger.error(e)
                 return render(request, 'register.html', {'error': '注册失败'})
         return HttpResponseForbidden('参数不正确')
+
+class CheckUserRepeat(View):
+    '''
+    检查用户名重复
+    '''
+    def get(self, request, uname):
+        try:
+            count = User.objects.filter(username=uname).count()
+            if count == 1:
+                return JsonResponse({'code': RETCODE.OK, 'msg': '该用户已经被注册', 'count': count})
+            return JsonResponse({'code': RETCODE.OK, 'msg': '该用户可以被注册', 'count': count})
+        except DatabaseError as e:
+            logger.error(e)
+            return JsonResponse({'code': RETCODE.DBERR, 'msg': '查询错误'})

@@ -53,7 +53,17 @@ var app = new Vue({
                         if (!unameRegex.test(this.dataForm.uname)) {
                             this.errorShow.uname = true;
                             this.errorMsg.uname = '用户名必须以字母开关2位以上'
+                            return
                         }
+                        let uurl = `/users/user_repeat/${this.dataForm.uname}/`;
+                        axios.get(uurl, {responseType: 'json'})
+                            .then(ret => {
+                                if (ret.data.count == 1) {
+                                    this.errorShow.uname = true;
+                                    this.errorMsg.uname = '该用户已经被注册'
+                                }
+                            })
+
                         break;
                     case 'password':
                         let passwordRegex = /^\w{6,}/;
