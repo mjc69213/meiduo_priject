@@ -128,3 +128,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+/meiduo_mall/.idea/
+将删除 meiduo_mall/meiduo_mall/apps/users/
+将删除 meiduo_mall/meiduo_mall/static/
+将删除 meiduo_mall/meiduo_mall/templates/
