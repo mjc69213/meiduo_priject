@@ -9,11 +9,12 @@ from django.http import HttpResponseForbidden, HttpResponse, JsonResponse
 from django.urls import reverse
 from django.contrib.auth import login
 
-from  .models import User
+from .models import User
 from users.utils.response_code import RETCODE
 
-
 logger = logging.Logger('django')
+
+
 class UserForm(forms.Form):
     '''
     用户提交注册数据的后端验证
@@ -33,7 +34,6 @@ class UserForm(forms.Form):
         return self.cleaned_data
 
 
-
 class RegisterView(View):
     '''
     用户注册
@@ -50,17 +50,19 @@ class RegisterView(View):
             user_forms.cleaned_data.pop('password2')
             try:
                 user = User.objects.create_user(**user_forms.cleaned_data)
-                login(request,user)
+                login(request, user)
                 return redirect(reverse('home:index'))
             except DatabaseError as e:
                 logger.error(e)
                 return render(request, 'register.html', {'error': '注册失败'})
         return HttpResponseForbidden('参数不正确')
 
+
 class CheckUserRepeat(View):
     '''
     检查用户名重复
     '''
+
     def get(self, request, uname):
         try:
             count = User.objects.filter(username=uname).count()
@@ -70,3 +72,20 @@ class CheckUserRepeat(View):
         except DatabaseError as e:
             logger.error(e)
             return JsonResponse({'code': RETCODE.DBERR, 'msg': '查询错误'})
+
+
+class CheckPhoneRepeat(View):
+    '''
+    检查手机号重复
+    '''
+
+    def get(self, request, phone):
+        try:
+            count = User.objects.filter(mobile=phone).count()
+            if count == 1:
+                return JsonResponse({'code': RETCODE.OK, 'msg': '该手机已经被注册', 'count': count})
+            return JsonResponse({'code':RETCODE.OK, 'msg': '该手机可以注册', 'count': count})
+        except DatabaseError as e:
+            logger.error(e)
+            return JsonResponse({'code': RETCODE.DBERR, 'msg': '查询错误'})
+

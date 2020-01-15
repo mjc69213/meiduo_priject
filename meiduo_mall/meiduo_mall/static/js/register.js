@@ -82,7 +82,16 @@ var app = new Vue({
                         if (!mobileRegex.test(this.dataForm.mobile)) {
                             this.errorShow.mobile = true;
                             this.errorMsg.mobile = '手机格式不正确';
+                            return
                         }
+                        let murl = `/users/phone_repeat/${this.dataForm.mobile}/`;
+                        axios(murl, {responseType: 'json'})
+                            .then(ret => {
+                                if (ret.data.count == 1) {
+                                    this.errorShow.mobile = true;
+                                    this.errorMsg.mobile = '该手机号已经被注册'
+                                }
+                            })
                         break;
                 }
             }
