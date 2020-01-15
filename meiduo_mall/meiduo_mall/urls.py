@@ -19,5 +19,7 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     # 用户模块
-    path('users/', include(('users.urls', 'users'), namespace='users'))
+    path('users/', include(('users.urls', 'users'), namespace='users')),
+    # 首页
+    path('', include(('contents.urls', 'contents'), namespace='home'))
 ]

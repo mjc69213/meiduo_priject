@@ -1,11 +1,13 @@
 import logging
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views import View
 from django import forms
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 from django.db.utils import DatabaseError
 from django.http import HttpResponseForbidden, HttpResponse
+from django.urls import reverse
+from django.contrib.auth import login
 
 from  .models import User
 
@@ -45,8 +47,9 @@ class RegisterView(View):
             user_forms.cleaned_data.pop('allow')
             user_forms.cleaned_data.pop('password2')
             try:
-                User.objects.create_user(**user_forms.cleaned_data)
-                return HttpResponse('ok')
+                user = User.objects.create_user(**user_forms.cleaned_data)
+                login(request,user)
+                return redirect(reverse('home:index'))
             except DatabaseError as e:
                 logger.error(e)
                 return render(request, 'register.html', {'error': '注册失败'})
