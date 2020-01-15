@@ -192,3 +192,6 @@ LOGGING = {
         },
     }
 }
+
+# 设置本项目的用户模型表
+AUTH_USER_MODEL = 'users.User'
