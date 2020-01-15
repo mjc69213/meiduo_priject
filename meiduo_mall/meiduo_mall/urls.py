@@ -21,5 +21,7 @@ urlpatterns = [
     # 用户模块
     path('users/', include(('users.urls', 'users'), namespace='users')),
     # 首页
-    path('', include(('contents.urls', 'contents'), namespace='home'))
+    path('', include(('contents.urls', 'contents'), namespace='home')),
+    # 验证模块
+    path('', include(('verifications.urls', 'verifications'), namespace='verifications')),
 ]

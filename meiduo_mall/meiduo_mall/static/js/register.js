@@ -28,10 +28,19 @@ var app = new Vue({
             imageCode: '请填写图形验证码',
             smsCode: '请填写短信验证码',
             allow: '请勾选用户协议'
-        }
+        },
+        uuid: '',
+        imgUrl: ''
+    },
+    mounted () {
+        this.getImgCode()
     },
     methods: {
-        on_submit() {
+        getImgCode() {
+            this.uuid = generateUUID();
+            this.imgUrl = `/image_codes/${this.uuid}/`
+        },
+        on_submit() { // 提交表单
             this.checkError('uname');
             this.checkError('password');
             this.checkError('password2');
@@ -42,7 +51,7 @@ var app = new Vue({
             }
 
         },
-        checkError(name) {
+        checkError(name) { // 提交表单前的错误检查
             if (this.dataForm[name] == '') {
                 return this.errorShow[name] = true;
             } else {
@@ -62,8 +71,7 @@ var app = new Vue({
                                     this.errorShow.uname = true;
                                     this.errorMsg.uname = '该用户已经被注册'
                                 }
-                            })
-
+                            });
                         break;
                     case 'password':
                         let passwordRegex = /^\w{6,}/;
@@ -93,6 +101,7 @@ var app = new Vue({
                                 }
                             })
                         break;
+
                 }
             }
 
