@@ -21,6 +21,7 @@
 			</div>
 			<div class="reg_form clearfix">
 				<form method="post" class="register_form" accept="{% url 'users:register' %}" @submit="on_submit">
+                    {% csrf_token %}
 					<ul>
 						<li>
 							<label>用户名:</label>

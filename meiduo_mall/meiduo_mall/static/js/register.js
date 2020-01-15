@@ -37,7 +37,7 @@ var app = new Vue({
             this.checkError('password2');
             this.checkError('mobile');
             this.checkError('allow');
-            if (this.errorShow.uname || this.errorShow.password || this.errorShow.password2 || this.errorShow.mobile) {
+            if (this.errorShow.uname || this.errorShow.password || this.errorShow.password2 || this.errorShow.mobile || this.errorShow.allow) {
                 window.event.returnValue = false
             }
 
@@ -49,7 +49,7 @@ var app = new Vue({
                 this.errorShow[name] = false;
                 switch (name) {
                     case 'uname':
-                        let unameRegex = /^[a-zA-Z]\w+/;
+                        let unameRegex = /^[a-zA-Z]\w{1,15}/;
                         if (!unameRegex.test(this.dataForm.uname)) {
                             this.errorShow.uname = true;
                             this.errorMsg.uname = '用户名必须以字母开关2位以上'
