@@ -59,7 +59,7 @@
                         <label>短信验证码:</label>
                         <input type="text" name="sms_code" id="msg_code" class="msg_input" v-model="dataForm.smsCode"
                                @blur="checkError('smsCode')">
-                        <a href="javascript:;" class="get_msg_code">获取短信验证码</a>
+                        <a href="javascript:;" class="get_msg_code" @click="getSmsCode">[[sendMsg]]</a>
                         <span class="error_tip" v-if="errorShow.smsCode">[[errorMsg.smsCode]]</span>
                     </li>
                     <li class="agreement">

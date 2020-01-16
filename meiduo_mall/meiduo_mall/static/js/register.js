@@ -30,13 +30,57 @@ var app = new Vue({
             allow: '请勾选用户协议'
         },
         uuid: '',
-        imgUrl: ''
+        imgUrl: '',
+        sendMsg: '获取短信验证码',
+        sendFlag: true
     },
-    mounted () {
+    mounted() {
         this.getImgCode()
     },
     methods: {
-        getImgCode() {
+        getSmsCode() {
+            // 加入互斥锁
+            if (!this.sendFlag) {
+                return
+            }
+            this.sendFlag = false;
+            // 先检查手机号和图形验证码是否已经填写,没有填写直接return掉
+            this.checkError('mobile');
+            this.checkError('imageCode');
+            if (this.errorShow.mobile || this.errorShow.imageCode) return
+            // 拼接url
+            // let surl = `/sms_codes/${this.dataForm.mobile}/?uuid=${this.uuid}&image_code=${this.dataForm.imageCode}`
+            let surl = `/sms_codes/${this.dataForm.mobile}/`;
+            // 发送ajax请求
+            axios({
+                methods: 'get',
+                url: surl,
+                params: {
+                    uuid: this.uuid,
+                    image_code: this.dataForm.imageCode
+                }
+            })
+                .then(ret => {
+                    if (ret.data.code == 0) { // 短信发送成功的情况下
+                        var num = 60;
+                        var timer = setInterval(() => {
+                            if (num <= 1) {
+                                clearInterval(timer);
+                                this.sendMsg = '获取短信验证码';
+                                this.sendFlag = true;
+                            } else {
+                                num--;
+                                this.sendMsg = `${num}秒`
+                            }
+                        }, 1000)
+                    } else { // 短信发送失败情况
+                        this.errorShow.imageCode = true;
+                        this.errorMsg.imageCode = ret.data.msg;
+                        this.sendFlag = true;
+                    }
+                })
+        },
+        getImgCode() { // 获取图形验证码
             this.uuid = generateUUID();
             this.imgUrl = `/image_codes/${this.uuid}/`
         },
@@ -81,7 +125,7 @@ var app = new Vue({
                         }
                         break;
                     case 'password2':
-                        if(this.dataForm.password != this.dataForm.password2) {
+                        if (this.dataForm.password != this.dataForm.password2) {
                             this.errorShow.password2 = true;
                         }
                         break;
