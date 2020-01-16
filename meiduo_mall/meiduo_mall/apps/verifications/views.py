@@ -12,10 +12,12 @@ from verifications.utils.captcha.captcha import captcha
 from verifications.utils import constants
 from verifications.utils.response_code import RETCODE
 from verifications.utils.yuntongxun.ccp_sms import CCP
+from celery_tasks.sms.tasks import ccp_send_sms_code
 
 
 logger = logging.Logger('django')
 redis_handel = get_redis_connection('verify_code')
+p1 = redis_handel.pipeline()
 
 class ImageCodeView(View):
     '''
@@ -65,12 +67,14 @@ class SMSCodeView(View):
                 return JsonResponse({'code': RETCODE.IMAGECODEERR, 'msg': '验证码错误'})
             random_num = '%06d' % random.randint(1, 999999)
             logger.info(random_num)
-            ret = CCP().send_sms_template(phone, [random_num, constants.SMS_CODE_REDIS_EXPIRES // 60], '1')
+            # ret = CCP().send_sms_template(phone, [random_num, constants.SMS_CODE_REDIS_EXPIRES // 60], '1')
+            ret = ccp_send_sms_code(phone, random_num)
             if ret == -1:
                 return JsonResponse({'code': RETCODE.OK, 'msg': '短信发送失败'})
             try:
-                redis_handel.setex(f'sms_{phone}', constants.SMS_CODE_REDIS_EXPIRES, random_num)
-                redis_handel.setex(f'send_{phone}', constants.SEND_SMS_CODE_INTERVAL, 1)
+                p1.setex(f'sms_{phone}', constants.SMS_CODE_REDIS_EXPIRES, random_num)
+                p1.setex(f'send_{phone}', constants.SEND_SMS_CODE_INTERVAL, 1)
+                p1.execute()
             except DatabaseError as e:
                 logger.error(e)
                 return JsonResponse({'code': RETCODE.DBERR, 'msg': '未知错误'})
