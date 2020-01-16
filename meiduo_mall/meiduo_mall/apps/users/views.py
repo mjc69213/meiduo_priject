@@ -8,11 +8,13 @@ from django.db.utils import DatabaseError
 from django.http import HttpResponseForbidden, HttpResponse, JsonResponse
 from django.urls import reverse
 from django.contrib.auth import login
+from django_redis import get_redis_connection
 
 from .models import User
 from users.utils.response_code import RETCODE
 
 logger = logging.Logger('django')
+redis_handel = get_redis_connection('verify_code')
 
 
 class UserForm(forms.Form):
@@ -23,6 +25,7 @@ class UserForm(forms.Form):
     password = forms.CharField(max_length=6, validators=[RegexValidator(r'^\w{6,}', '密码长度不够')])
     password2 = forms.CharField(max_length=6, validators=[RegexValidator(r'^\w{6,}', '重复密码长度不够')])
     mobile = forms.CharField(max_length=11, validators=[RegexValidator(r'^1[35896]\d{9}', '手机号码格式不正确')])
+    sms_code = forms.CharField()
     allow = forms.CharField(validators=[RegexValidator(r'on', '没有勾选同意协议')])
 
     def clean(self):
@@ -48,7 +51,15 @@ class RegisterView(View):
             # 保存检验过的数据
             user_forms.cleaned_data.pop('allow')
             user_forms.cleaned_data.pop('password2')
+            phone = user_forms.cleaned_data.get('mobile')
+            sms_server = redis_handel.get(f'sms_{phone}')
+            sms_cli = user_forms.cleaned_data.get('sms_code')
+            if sms_server is None:
+                return render(request, 'register.html', {'error': '短信验证码失效'})
+            if sms_server.decode() != sms_cli:
+                return render(request, 'register.html', {'error': '短信验证码错误'})
             try:
+                user_forms.cleaned_data.pop('sms_code')
                 user = User.objects.create_user(**user_forms.cleaned_data)
                 login(request, user)
                 return redirect(reverse('home:index'))

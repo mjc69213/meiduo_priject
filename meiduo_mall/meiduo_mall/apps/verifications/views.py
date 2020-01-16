@@ -51,6 +51,10 @@ class SMSCodeView(View):
             img_cli = parms_form.cleaned_data.get('image_code')
             uid = parms_form.cleaned_data.get('uuid')
             img_server = redis_handel.get(f'img_{uid}')
+            # 后端限制60秒内发送短信限制
+            send_flage = redis_handel.get(f'send_{phone}')
+            if send_flage:
+                return JsonResponse({'code': RETCODE.IMAGECODEERR, 'msg': '发送短信过于频繁'})
             # 防止用户恶意猜图形验证码，需要删除redis中的验证码
             redis_handel.delete(f'img_{uid}')
             if img_server is None:
@@ -66,6 +70,7 @@ class SMSCodeView(View):
                 return JsonResponse({'code': RETCODE.OK, 'msg': '短信发送失败'})
             try:
                 redis_handel.setex(f'sms_{phone}', constants.SMS_CODE_REDIS_EXPIRES, random_num)
+                redis_handel.setex(f'send_{phone}', constants.SEND_SMS_CODE_INTERVAL, 1)
             except DatabaseError as e:
                 logger.error(e)
                 return JsonResponse({'code': RETCODE.DBERR, 'msg': '未知错误'})
